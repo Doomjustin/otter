@@ -14,8 +14,9 @@ Diagnostics:
       - "readability-magic-numbers"
       - "readability-braces-around-statements"
       - "readability-implicit-bool-conversion"
-      - "readability-make-member-function-const"
       - "readability-identifier-length"
+      - "readability-math-missing-parentheses"
+      - "modernize-use-nodiscard"
 
 InlayHints:
   Enabled: true
