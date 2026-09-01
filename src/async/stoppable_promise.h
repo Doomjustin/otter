@@ -29,7 +29,18 @@ concept io_awaiter =
 
 struct StoppablePromise {
     std::stop_token stop_token;
-    IOContext* io_context;
+    IOContext* context;
+
+    StoppablePromise() = default;
+
+    StoppablePromise(IOContext& ctx)
+      : context{ &ctx }
+    {}
+
+    StoppablePromise(IOContext& ctx, std::stop_token stop_token)
+      : context{ &ctx }
+      , stop_token{ std::move(stop_token) }
+    {}
 
     template<typename Awaitable>
     class StopTokenWrapper {
@@ -55,7 +66,7 @@ struct StoppablePromise {
 
         auto context() const noexcept -> IOContext&
         {
-            return *(promise_->io_context);
+            return *(promise_->context);
         }
 
         auto await_ready() -> bool
@@ -103,7 +114,7 @@ struct StoppablePromise {
                 }
             };
 
-            return Awaiter{ io_context };
+            return Awaiter{ context };
         }
         else if constexpr (std::is_same_v<Tag, this_coro::stop_token_tag>) {
             struct Awaiter {

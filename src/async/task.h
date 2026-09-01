@@ -176,14 +176,14 @@ public:
         return handle_;
     }
 
-    void release() noexcept
+    auto release() noexcept
     {
-        handle_ = nullptr;
+        return std::exchange(handle_, nullptr);
     }
 
     auto resume()
     {
-        std::exchange(handle_, nullptr).resume();
+        handle_.resume();
     }
 
     auto operator()()

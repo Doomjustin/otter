@@ -27,9 +27,13 @@ struct Awaiter {
     {
         this->result = result;
         this->flags = flags;
-        
+
         std::exchange(handle, nullptr).resume();
     }
+};
+
+struct DummyAwaiter : Awaiter {
+    void resume(int result, std::uint32_t flags) override {}
 };
 
 } // namespace otter::async

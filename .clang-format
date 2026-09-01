@@ -58,7 +58,7 @@ IncludeBlocks: Regroup
 IncludeCategories:
   - Regex: '^<[a-z0-9_]+>$'
     Priority: 1
-  - Regex: '^<utility|leveldb/.*>$'
+  - Regex: '^<otter/.*>$'
     Priority: 4
   - Regex: '^<[a-zA-Z0-9_/\.]+\.(h|hpp)>$'
     Priority: 2

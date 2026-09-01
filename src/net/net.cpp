@@ -1,5 +1,1 @@
-#include <net/net.h>
-
-namespace net {
-
-} // namespace net
+namespace net {} // namespace net

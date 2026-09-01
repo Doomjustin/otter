@@ -17,6 +17,7 @@ Diagnostics:
       - "readability-identifier-length"
       - "readability-math-missing-parentheses"
       - "modernize-use-nodiscard"
+      - "readability-convert-member-functions-to-static"
 
 InlayHints:
   Enabled: true
