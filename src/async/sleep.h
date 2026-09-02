@@ -13,7 +13,7 @@ class TimerAwaiter : public IOAwaiter<TimerAwaiter> {
 private:
     ::__kernel_timespec timeout_;
 
-    auto cast_time(utility::chrono_duration auto duration) -> __kernel_timespec
+    auto cast_time(chrono_duration auto duration) -> __kernel_timespec
     {
         using namespace std::chrono;
         auto ns = duration_cast<nanoseconds>(duration).count();
@@ -21,7 +21,7 @@ private:
     }
 
 public:
-    template<utility::chrono_duration Duration>
+    template<chrono_duration Duration>
     explicit TimerAwaiter(Duration duration)
       : IOAwaiter<TimerAwaiter>{}
     {
@@ -53,7 +53,7 @@ public:
         if (result == 0 || result == -ETIME)
             return {};
 
-        return utility::unexpected_system_error(-result);
+        return unexpected_system_error(-result);
     }
 
     void prepare(::io_uring_sqe* sqe) noexcept
@@ -62,7 +62,7 @@ public:
     }
 };
 
-template<utility::chrono_duration Duration>
+template<chrono_duration Duration>
 auto sleep_for(Duration duration) -> TimerAwaiter
 {
     return TimerAwaiter{ duration };

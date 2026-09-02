@@ -5,6 +5,7 @@
 #include <async/detached_task.h>
 #include <async/io_context.h>
 #include <async/operation.h>
+#include <async/retry.h>
 #include <async/signal.h>
 #include <async/sleep.h>
 #include <async/spawn.h>

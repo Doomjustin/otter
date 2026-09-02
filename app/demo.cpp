@@ -6,7 +6,7 @@
 
 #include <otter/async.h>
 
-#include "async/io_context.h"
+#include "utility/defer.h"
 
 using namespace otter::async;
 using namespace std::literals;
@@ -27,7 +27,7 @@ auto shutdown_monitor(std::stop_source stop_source) -> Task<>
 
 auto hello() -> Task<>
 {
-    auto res = co_await timeout(sleep_for(5s), 1ms);
+    auto res = co_await (sleep_for(5s) | timeout(2s));
     if (!res) {
         spdlog::error("{}", res.error().message());
         co_return;

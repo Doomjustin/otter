@@ -4,7 +4,7 @@
 #include <atomic>
 #include <concepts>
 
-namespace otter::utility {
+namespace otter {
 
 struct MPSCQueueNode {
     std::atomic<MPSCQueueNode*> mpsc_next{ nullptr };
@@ -73,6 +73,6 @@ private:
     std::atomic<MPSCQueueNode*> head_{ nullptr };
 };
 
-} // namespace otter::utility
+} // namespace otter
 
 #endif // OTTER_UTILITY_MPSC_QUEUE_H

@@ -4,7 +4,7 @@
 #include <chrono>
 #include <type_traits>
 
-namespace otter::utility {
+namespace otter {
 
 template<typename T>
 struct is_chrono_duration_impl : std::false_type {};
@@ -15,6 +15,6 @@ struct is_chrono_duration_impl<std::chrono::duration<Rep, Period>> : std::true_t
 template<typename T>
 concept chrono_duration = is_chrono_duration_impl<std::remove_cvref_t<T>>::value;
 
-} // namespace otter::utility
+} // namespace otter
 
 #endif // OTTER_UTILITY_CHRONO_DURATION_H

@@ -43,7 +43,7 @@ public:
     auto await_resume() noexcept -> std::expected<ResumeType, std::error_code>
     {
         if (result < 0)
-            return utility::unexpected_system_error(-result);
+            return unexpected_system_error(-result);
 
         if constexpr (std::is_void_v<ResumeType>)
             return {};

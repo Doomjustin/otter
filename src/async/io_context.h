@@ -16,7 +16,7 @@ namespace otter::async {
 
 class IOContext {
 private:
-    struct CancelNode : public utility::MPSCQueueNode {
+    struct CancelNode : public MPSCQueueNode {
         Operation* operation;
     };
 
@@ -29,7 +29,7 @@ private:
     std::atomic<std::uint64_t> tracked_operations_ = 0;
 
     std::queue<std::coroutine_handle<>> ready_tasks_;
-    utility::MPSCQueue<CancelNode> cancel_queue_;
+    MPSCQueue<CancelNode> cancel_queue_;
 
 public:
     explicit IOContext(std::uint32_t entries = 1024);

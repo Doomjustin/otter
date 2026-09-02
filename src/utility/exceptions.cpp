@@ -1,6 +1,6 @@
 #include "exceptions.h"
 
-namespace otter::utility {
+namespace otter {
 
 auto unexpected_system_error() -> std::unexpected<std::error_code>
 {
@@ -17,4 +17,4 @@ auto unexpected_system_error(int error) -> std::unexpected<std::error_code>
     return std::unexpected{ std::error_code{ error, std::system_category() } };
 }
 
-} // namespace otter::utility
+} // namespace otter

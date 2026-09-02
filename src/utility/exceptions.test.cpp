@@ -5,7 +5,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace otter::utility;
+using namespace otter;
 
 TEST_CASE("throw_system_error: throws std::system_error with explicit error code", "[exceptions]")
 {

@@ -47,7 +47,7 @@ struct signals {
         (::sigaddset(&mask, signal), ...);
 
         if (auto err = ::pthread_sigmask(SIG_BLOCK, &mask, nullptr); err != 0)
-            utility::throw_system_error(err, "Failed to block signals");
+            throw_system_error(err, "Failed to block signals");
     }
 
     static constexpr auto interrupt = Signal{ SIGINT };
@@ -100,11 +100,11 @@ public:
         (::sigaddset(&mask_, sigal), ...);
 
         if (auto err = ::pthread_sigmask(SIG_BLOCK, &mask_, nullptr); err != 0)
-            utility::throw_system_error(err, "Failed to block signals");
+            throw_system_error(err, "Failed to block signals");
 
         fd_ = ::signalfd(-1, &mask_, SFD_NONBLOCK | SFD_CLOEXEC);
         if (fd_ == -1)
-            utility::throw_system_error("Failed to create signalfd");
+            throw_system_error("Failed to create signalfd");
     }
 
     SignalSet(const SignalSet&) = delete;

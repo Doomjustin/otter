@@ -9,11 +9,11 @@ namespace otter::async {
 IOContext::IOContext(std::uint32_t entries)
 {
     if (auto res = ::io_uring_queue_init(entries, &ring_, 0); res < 0)
-        utility::throw_system_error(-res, "io_uring_queue_init failed");
+        throw_system_error(-res, "io_uring_queue_init failed");
 
     wakeup_fd_ = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
     if (wakeup_fd_ < 0)
-        utility::throw_system_error("created eventfd failed");
+        throw_system_error("created eventfd failed");
 
     arm_wakeup();
 }
@@ -86,7 +86,7 @@ void IOContext::process_cqes()
         if (res == -EINTR)
             return;
 
-        utility::throw_system_error(-res, "io_uring_submit_and_wait failed");
+        throw_system_error(-res, "io_uring_submit_and_wait failed");
     }
 
     unsigned count{ 0 };

@@ -2,6 +2,7 @@
 #define OTTER_UTILITY_UTILITY_H
 
 #include <utility/chrono_duration.h>
+#include <utility/defer.h>
 #include <utility/exceptions.h>
 #include <utility/mpsc_queue.h>
 
