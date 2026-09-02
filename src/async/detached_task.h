@@ -3,7 +3,6 @@
 
 #include <coroutine>
 #include <exception>
-#include <iostream>
 
 #include "stoppable_promise.h"
 
@@ -20,6 +19,11 @@ struct DetachedTask {
         promise_type(IOContext& ctx, std::stop_token stop_token, Awaitable&& awaitable)
           : StoppablePromise{ ctx, std::move(stop_token) }
         {}
+
+        ~promise_type() noexcept
+        {
+            context->untrack();
+        }
 
         auto get_return_object() noexcept -> DetachedTask
         {

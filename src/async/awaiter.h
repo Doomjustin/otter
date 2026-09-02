@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <expected>
 #include <type_traits>
-#include <utility>
 
 #include <otter/utility.h>
 
@@ -33,6 +32,7 @@ public:
         if (auto* sqe = ctx.sqe()) {
             static_cast<Derived*>(this)->prepare(sqe);
             ::io_uring_sqe_set_data(sqe, this);
+            ctx.track();
             return std::noop_coroutine();
         }
 

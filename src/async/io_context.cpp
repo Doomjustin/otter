@@ -1,12 +1,8 @@
 #include "io_context.h"
 
-#include <atomic>
-
 #include <liburing.h>
 #include <poll.h>
 #include <sys/eventfd.h>
-
-#include <otter/utility.h>
 
 namespace otter::async {
 
@@ -31,7 +27,11 @@ IOContext::~IOContext()
 
 void IOContext::run()
 {
-    while (!should_stop_.load(std::memory_order_relaxed)) {
+    while (tracked_operations_.load(std::memory_order_relaxed) > 0) {
+        if (should_stop_.load(std::memory_order_relaxed))
+            // TODO: Handle graceful shutdown of remaining operations
+            break;
+
         process_cancels();
         process_readies();
         process_cqes();
@@ -62,9 +62,20 @@ void IOContext::cancel(Operation& operation)
     wakeup();
 }
 
+void IOContext::track()
+{
+    tracked_operations_.fetch_add(1, std::memory_order_relaxed);
+}
+
+void IOContext::untrack()
+{
+    tracked_operations_.fetch_sub(1, std::memory_order_relaxed);
+}
+
 void IOContext::submit(std::coroutine_handle<> task)
 {
     ready_tasks_.push(task);
+    track();
     wakeup();
 }
 
@@ -104,6 +115,7 @@ void IOContext::process_cqes()
         if (data != 0) {
             auto* p = static_cast<Operation*>(::io_uring_cqe_get_data(cqe));
             p->resume(cqe->res, cqe->flags);
+            untrack();
         }
     }
 
@@ -125,7 +137,7 @@ void IOContext::process_readies()
 void IOContext::process_cancels()
 {
     auto* node = cancel_queue_.pop_all();
-    while (node) {
+    while (node && node->operation) {
         auto* cancel_sqe = sqe();
         ::io_uring_prep_cancel(cancel_sqe, node->operation, 0);
         ::io_uring_sqe_set_data64(cancel_sqe, CANCEL_MARKER);

@@ -5,38 +5,14 @@
 #include <coroutine>
 #include <cstdint>
 #include <queue>
-#include <utility>
 
 #include <liburing.h>
 
 #include <otter/utility.h>
 
+#include "operation.h"
+
 namespace otter::async {
-
-struct Operation {
-    std::coroutine_handle<> handle;
-
-    int result;
-    std::uint32_t flags;
-
-    Operation() = default;
-
-    Operation(const Operation&) = delete;
-    auto operator=(const Operation&) -> Operation& = delete;
-
-    Operation(Operation&&) noexcept = default;
-    auto operator=(Operation&&) noexcept -> Operation& = default;
-
-    virtual ~Operation() = default;
-
-    virtual void resume(int result, std::uint32_t flags)
-    {
-        this->result = result;
-        this->flags = flags;
-
-        std::exchange(handle, nullptr).resume();
-    }
-};
 
 class IOContext {
 private:
@@ -49,11 +25,11 @@ private:
 
     ::io_uring ring_;
     std::atomic<bool> should_stop_ = false;
+    int wakeup_fd_ = -1;
+    std::atomic<std::uint64_t> tracked_operations_ = 0;
 
     std::queue<std::coroutine_handle<>> ready_tasks_;
     utility::MPSCQueue<CancelNode> cancel_queue_;
-
-    int wakeup_fd_ = -1;
 
 public:
     explicit IOContext(std::uint32_t entries = 1024);
@@ -66,15 +42,21 @@ public:
 
     ~IOContext();
 
-    void submit(std::coroutine_handle<> task);
-
+    // 如果没有正在进行的操作，run 会停止
     void run();
 
-    auto sqe() -> ::io_uring_sqe*;
-
+    // 强行停止，目前的实现不会停止正在进行的操作，而是强制停止
     void stop();
 
+    void submit(std::coroutine_handle<> task);
+
     void cancel(Operation& operation);
+
+    void track();
+
+    void untrack();
+
+    auto sqe() -> ::io_uring_sqe*;
 
 private:
     void process_cqes();

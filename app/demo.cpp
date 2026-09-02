@@ -6,55 +6,58 @@
 
 #include <otter/async.h>
 
-using namespace otter::async;
+#include "async/io_context.h"
 
-auto factorial(int n) -> otter::async::Task<int>
+using namespace otter::async;
+using namespace std::literals;
+
+auto shutdown_monitor(std::stop_source stop_source) -> Task<>
 {
-    if (n <= 1) {
-        spdlog::info("factorial({}) intermediate result = 1", n);
-        co_return 1;
+    SignalSet signals{ signals::interrupt, signals::terminate };
+    auto res = co_await signals.async_wait();
+
+    if (!res) {
+        spdlog::error("signal wait failed: {}", res.error().message());
+        co_return;
     }
 
-    auto tmp = co_await factorial(n - 1);
-    spdlog::info("factorial({}) intermediate result = {}", n, tmp);
-    co_return (n * tmp);
+    spdlog::info("received terminate signal {}", *res);
+    stop_source.request_stop();
 }
 
-auto hello(std::string num) -> otter::async::Task<>
+auto hello() -> Task<>
 {
-    auto result = co_await factorial(5);
-    spdlog::info("[{}] factorial(5) = {}", num, result);
+    auto res = co_await timeout(sleep_for(5s), 1ms);
+    if (!res) {
+        spdlog::error("{}", res.error().message());
+        co_return;
+    }
 
-    auto task = factorial(1);
-    spawn(co_await this_coro::context, std::move(task));
-
-    spdlog::info("--- Starting sleep");
-    co_await sleep_for(std::chrono::minutes(1));
-    spdlog::info("--- Slept over");
-    co_return;
+    spdlog::info("after");
 }
 
-void async_main(IOContext& ctx, std::stop_token stop_token)
+void worker(std::stop_token stop_token)
 {
-    spawn(ctx, hello("1"), std::move(stop_token));
+    auto ctx = IOContext{};
+    spawn(ctx, hello(), std::move(stop_token));
     ctx.run();
 }
 
 int main()
 {
-    std::stop_source stop_source{};
-    otter::async::IOContext ctx{};
-    std::thread t{ async_main, std::ref(ctx), stop_source.get_token() };
+    signals::block(signals::interrupt, signals::terminate);
+    std::stop_source process_stop_source{};
+    auto stop_token = process_stop_source.get_token();
 
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    stop_source.request_stop();
-    spdlog::info("Stop requested");
+    auto thread_count = std::thread::hardware_concurrency();
+    std::vector<std::jthread> threads(thread_count - 1);
+    for (auto& thread : threads)
+        thread = std::jthread(worker, stop_token);
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    spdlog::info("Stopping context");
-    ctx.stop();
-    t.join();
-    spdlog::info("Thread joined");
+    IOContext ctx{};
+    spawn(ctx, shutdown_monitor(process_stop_source));
+    spawn(ctx, hello(), stop_token);
+    ctx.run();
 
     return EXIT_SUCCESS;
 }

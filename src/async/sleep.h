@@ -2,26 +2,18 @@
 #define OTTER_ASYNC_SLEEP_H
 
 #include <chrono>
-#include <type_traits>
+
+#include <otter/utility.h>
 
 #include "awaiter.h"
 
 namespace otter::async {
 
-template<typename T>
-struct is_chrono_duration_impl : std::false_type {};
-
-template<typename Rep, typename Period>
-struct is_chrono_duration_impl<std::chrono::duration<Rep, Period>> : std::true_type {};
-
-template<typename T>
-concept chrono_duration = is_chrono_duration_impl<std::remove_cvref_t<T>>::value;
-
 class TimerAwaiter : public IOAwaiter<TimerAwaiter> {
 private:
     ::__kernel_timespec timeout_;
 
-    auto cast_time(chrono_duration auto duration) -> __kernel_timespec
+    auto cast_time(utility::chrono_duration auto duration) -> __kernel_timespec
     {
         using namespace std::chrono;
         auto ns = duration_cast<nanoseconds>(duration).count();
@@ -29,7 +21,7 @@ private:
     }
 
 public:
-    template<chrono_duration Duration>
+    template<utility::chrono_duration Duration>
     explicit TimerAwaiter(Duration duration)
       : IOAwaiter<TimerAwaiter>{}
     {
@@ -70,7 +62,7 @@ public:
     }
 };
 
-template<chrono_duration Duration>
+template<utility::chrono_duration Duration>
 auto sleep_for(Duration duration) -> TimerAwaiter
 {
     return TimerAwaiter{ duration };
