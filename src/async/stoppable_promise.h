@@ -47,6 +47,16 @@ struct StoppablePromise {
     private:
         struct CancelFunc {
             StopTokenWrapper<Awaitable>* wrapper;
+
+            void operator()()
+            {
+                if (wrapper) {
+                    if constexpr (cancellable<Awaitable>)
+                        wrapper->inner_.cancel(*(wrapper->promise_->context));
+                    else
+                        wrapper->context().cancel(wrapper->inner_);
+                }
+            }
         };
 
         Awaitable inner_;

@@ -1,2 +1,2 @@
 add_executable(demo demo.cpp)
-target_link_libraries(demo PRIVATE otter::otter)
+target_link_libraries(demo PRIVATE otter::otter spdlog::spdlog)

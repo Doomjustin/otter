@@ -3,37 +3,59 @@
 
 #include <coroutine>
 #include <cstdint>
+#include <expected>
+#include <type_traits>
 #include <utility>
+
+#include <otter/utility.h>
+
+#include "io_context.h"
 
 namespace otter::async {
 
-struct Awaiter {
-    std::coroutine_handle<> handle;
-
-    int result;
-    std::uint32_t flags;
-
-    Awaiter() = default;
-
-    Awaiter(const Awaiter&) = delete;
-    auto operator=(const Awaiter&) -> Awaiter& = delete;
-
-    Awaiter(Awaiter&&) = delete;
-    auto operator=(Awaiter&&) -> Awaiter& = delete;
-
-    virtual ~Awaiter() = default;
-
-    virtual void resume(int result, std::uint32_t flags)
-    {
-        this->result = result;
-        this->flags = flags;
-
-        std::exchange(handle, nullptr).resume();
-    }
+struct DummyAwaiter : Operation {
+    void resume(int result, std::uint32_t flags) override {}
 };
 
-struct DummyAwaiter : Awaiter {
-    void resume(int result, std::uint32_t flags) override {}
+template<typename Derived, typename ResumeType = void>
+struct IOAwaiter : Operation {
+public:
+    auto await_ready() const noexcept -> bool
+    {
+        return false;
+    }
+
+    auto await_suspend(std::coroutine_handle<> handle, IOContext& ctx) noexcept
+        -> std::coroutine_handle<>
+    {
+        this->handle = handle;
+
+        if (auto* sqe = ctx.sqe()) {
+            static_cast<Derived*>(this)->prepare(sqe);
+            ::io_uring_sqe_set_data(sqe, this);
+            return std::noop_coroutine();
+        }
+
+        result = -EAGAIN;
+        return handle;
+    }
+
+    auto await_resume() noexcept -> std::expected<ResumeType, std::error_code>
+    {
+        if (result < 0)
+            return utility::unexpected_system_error(-result);
+
+        if constexpr (std::is_void_v<ResumeType>)
+            return {};
+
+        else
+            return static_cast<Derived*>(this)->value();
+    }
+
+    auto value() const noexcept -> ResumeType
+    {
+        return static_cast<const Derived*>(this)->value();
+    }
 };
 
 } // namespace otter::async

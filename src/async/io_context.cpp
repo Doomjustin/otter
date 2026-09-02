@@ -8,8 +8,6 @@
 
 #include <otter/utility.h>
 
-#include "awaiter.h"
-
 namespace otter::async {
 
 IOContext::IOContext(std::uint32_t entries)
@@ -34,7 +32,8 @@ IOContext::~IOContext()
 void IOContext::run()
 {
     while (!should_stop_.load(std::memory_order_relaxed)) {
-        process_ready_tasks();
+        process_cancels();
+        process_readies();
         process_cqes();
     }
 }
@@ -49,6 +48,18 @@ auto IOContext::sqe() -> ::io_uring_sqe*
     }
 
     return sqe;
+}
+
+void IOContext::stop()
+{
+    should_stop_.store(true, std::memory_order_relaxed);
+    wakeup();
+}
+
+void IOContext::cancel(Operation& operation)
+{
+    cancel_queue_.push(new CancelNode{ .operation = &operation });
+    wakeup();
 }
 
 void IOContext::submit(std::coroutine_handle<> task)
@@ -67,7 +78,7 @@ void IOContext::process_cqes()
         utility::throw_system_error(-res, "io_uring_submit_and_wait failed");
     }
 
-    unsigned count = 0;
+    unsigned count{ 0 };
     unsigned head;
     ::io_uring_cqe* cqe{ nullptr };
 
@@ -82,29 +93,46 @@ void IOContext::process_cqes()
 
             if (!(cqe->flags & IORING_CQE_F_MORE))
                 arm_wakeup();
+
+            continue;
         }
 
-        if (data != WAKEUP_MARKER) {
-            auto* p = reinterpret_cast<Awaiter*>(&data);
+        // 取消本身不需要处理，直接取出来就行
+        if (data == CANCEL_MARKER)
+            continue;
+
+        if (data != 0) {
+            auto* p = static_cast<Operation*>(::io_uring_cqe_get_data(cqe));
             p->resume(cqe->res, cqe->flags);
         }
-
-        if (count > 0)
-            ::io_uring_cq_advance(&ring_, count);
     }
+
+    if (count > 0)
+        ::io_uring_cq_advance(&ring_, count);
 }
 
-void IOContext::process_ready_tasks()
+void IOContext::process_readies()
 {
     while (!ready_tasks_.empty()) {
         auto handle = ready_tasks_.front();
-        ready_tasks_.pop();
-
         if (handle && !handle.done())
             handle.resume();
 
-        if (handle && handle.done())
-            handle.destroy();
+        ready_tasks_.pop();
+    }
+}
+
+void IOContext::process_cancels()
+{
+    auto* node = cancel_queue_.pop_all();
+    while (node) {
+        auto* cancel_sqe = sqe();
+        ::io_uring_prep_cancel(cancel_sqe, node->operation, 0);
+        ::io_uring_sqe_set_data64(cancel_sqe, CANCEL_MARKER);
+        ::io_uring_submit(&ring_);
+        auto* next = static_cast<CancelNode*>(node->mpsc_next.load(std::memory_order_relaxed));
+        delete node;
+        node = next;
     }
 }
 

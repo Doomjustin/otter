@@ -12,5 +12,6 @@
         "args": [],
         "cwd": "${workspaceFolder}",
         "externalConsole": false,
+        "miDebuggerPath": "/opt/llvm-22/bin/lldb-dap"
     },
 }

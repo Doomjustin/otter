@@ -3,41 +3,53 @@
 
 #include <coroutine>
 #include <exception>
+#include <iostream>
 
 #include "stoppable_promise.h"
 
 namespace otter::async {
 
 struct DetachedTask {
-    struct promise_type;
-    using handle_type = std::coroutine_handle<promise_type>;
-
-    handle_type handle;
-
     struct promise_type : StoppablePromise {
-        template<typename... Args>
-        promise_type(IOContext& ctx, Args&&... args)
+        template<typename Awaitable>
+        promise_type(IOContext& ctx, Awaitable&& awaitable)
           : StoppablePromise{ ctx }
         {}
 
-        template<typename... Args>
-        promise_type(IOContext& ctx, std::stop_token stop_token, Args&&... args)
+        template<typename Awaitable>
+        promise_type(IOContext& ctx, std::stop_token stop_token, Awaitable&& awaitable)
           : StoppablePromise{ ctx, std::move(stop_token) }
         {}
 
         auto get_return_object() noexcept -> DetachedTask
         {
-            return DetachedTask{ handle_type::from_promise(*this) };
-        }
-
-        auto initial_suspend() noexcept -> std::suspend_always
-        {
             return {};
         }
 
-        auto final_suspend() noexcept -> std::suspend_never
+        auto initial_suspend() noexcept
         {
-            return {};
+            struct Awaiter {
+                IOContext& context;
+
+                auto await_ready() const noexcept -> bool
+                {
+                    return false;
+                }
+
+                void await_suspend(std::coroutine_handle<> h) const noexcept
+                {
+                    context.submit(h);
+                }
+
+                void await_resume() const noexcept {}
+            };
+
+            return Awaiter{ *context };
+        }
+
+        auto final_suspend() noexcept
+        {
+            return std::suspend_never{};
         }
 
         void return_void() noexcept {}
@@ -49,10 +61,6 @@ struct DetachedTask {
             std::terminate();
         }
     };
-
-    explicit DetachedTask(handle_type h) noexcept
-      : handle{ h }
-    {}
 };
 
 } // namespace otter::async

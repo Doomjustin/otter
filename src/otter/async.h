@@ -4,6 +4,7 @@
 #include <async/awaiter.h>
 #include <async/detached_task.h>
 #include <async/io_context.h>
+#include <async/sleep.h>
 #include <async/spawn.h>
 #include <async/stoppable_promise.h>
 #include <async/task.h>
