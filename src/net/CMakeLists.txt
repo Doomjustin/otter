@@ -14,6 +14,7 @@ target_link_libraries(otter_net
         spdlog::spdlog
         magic_enum::magic_enum
         Microsoft.GSL::GSL
+        otter::async
 )
 
 if (${PROJECT_NAME}_BUILD_TESTS AND OTTER_NET_TEST_SOURCE)

@@ -7,7 +7,9 @@
 #include <async/operation.h>
 #include <async/read.h>
 #include <async/read_awaiter.h>
+#include <async/recv_awaiter.h>
 #include <async/retry.h>
+#include <async/send_awaiter.h>
 #include <async/signal.h>
 #include <async/sleep.h>
 #include <async/spawn.h>

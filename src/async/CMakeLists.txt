@@ -11,8 +11,6 @@ target_compile_features(otter_async PUBLIC cxx_std_23)
 target_include_directories(otter_async PUBLIC ${OTTER_INCLUDE_DIRS})
 target_link_libraries(otter_async
     PUBLIC
-        spdlog::spdlog
-        magic_enum::magic_enum
         Microsoft.GSL::GSL
         otter::utility
         PkgConfig::liburing

@@ -50,6 +50,17 @@ struct signals {
             throw_system_error(err, "Failed to block signals");
     }
 
+    static void block(const std::initializer_list<Signal>& signals)
+    {
+        sigset_t mask;
+        ::sigemptyset(&mask);
+        for (auto signal : signals)
+            ::sigaddset(&mask, signal);
+
+        if (auto err = ::pthread_sigmask(SIG_BLOCK, &mask, nullptr); err != 0)
+            throw_system_error(err, "Failed to block signals");
+    }
+
     static constexpr auto interrupt = Signal{ SIGINT };
     static constexpr auto terminate = Signal{ SIGTERM };
     static constexpr auto quit = Signal{ SIGQUIT };
@@ -98,6 +109,20 @@ public:
     {
         ::sigemptyset(&mask_);
         (::sigaddset(&mask_, sigal), ...);
+
+        if (auto err = ::pthread_sigmask(SIG_BLOCK, &mask_, nullptr); err != 0)
+            throw_system_error(err, "Failed to block signals");
+
+        fd_ = ::signalfd(-1, &mask_, SFD_NONBLOCK | SFD_CLOEXEC);
+        if (fd_ == -1)
+            throw_system_error("Failed to create signalfd");
+    }
+
+    SignalSet(const std::initializer_list<Signal>& signals)
+    {
+        ::sigemptyset(&mask_);
+        for (auto signal : signals)
+            ::sigaddset(&mask_, signal);
 
         if (auto err = ::pthread_sigmask(SIG_BLOCK, &mask_, nullptr); err != 0)
             throw_system_error(err, "Failed to block signals");

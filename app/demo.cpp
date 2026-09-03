@@ -9,9 +9,11 @@
 using namespace otter::async;
 using namespace std::literals;
 
+auto mask_signals = { signals::interrupt, signals::terminate };
+
 auto shutdown_monitor(std::stop_source stop_source) -> Task<>
 {
-    SignalSet signals{ signals::interrupt, signals::terminate };
+    SignalSet signals{ mask_signals };
     auto res = co_await signals.async_wait();
 
     if (!res) {
@@ -43,7 +45,8 @@ void worker(std::stop_token stop_token)
 
 int main()
 {
-    signals::block(signals::interrupt, signals::terminate);
+
+    signals::block(mask_signals);
     std::stop_source process_stop_source{};
     auto stop_token = process_stop_source.get_token();
 
