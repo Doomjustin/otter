@@ -6,8 +6,6 @@
 
 #include <otter/async.h>
 
-#include "utility/defer.h"
-
 using namespace otter::async;
 using namespace std::literals;
 
