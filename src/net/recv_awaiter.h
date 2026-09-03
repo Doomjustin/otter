@@ -1,16 +1,16 @@
-#ifndef OTTER_ASYNC_RECV_AWAITER_H
-#define OTTER_ASYNC_RECV_AWAITER_H
+#ifndef OTTER_NET_RECV_AWAITER_H
+#define OTTER_NET_RECV_AWAITER_H
 
 #include <cstddef>
 #include <span>
 
 #include <liburing.h>
 
-#include "awaiter.h"
+#include <otter/async.h>
 
-namespace otter::async {
+namespace otter::net {
 
-class RecvAwaiter : public IOAwaiter<RecvAwaiter, std::size_t> {
+class RecvAwaiter : public async::IOAwaiter<RecvAwaiter, std::size_t> {
 private:
     int fd_;
     std::span<std::byte> buffer_;
@@ -29,6 +29,6 @@ public:
     }
 };
 
-} // namespace otter::async
+} // namespace otter::net
 
-#endif // OTTER_ASYNC_RECV_AWAITER_H
+#endif // OTTER_NET_RECV_AWAITER_H

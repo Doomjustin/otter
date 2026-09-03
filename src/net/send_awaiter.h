@@ -1,16 +1,16 @@
-#ifndef OTTER_ASYNC_SEND_AWAITER_H
-#define OTTER_ASYNC_SEND_AWAITER_H
+#ifndef OTTER_NET_SEND_AWAITER_H
+#define OTTER_NET_SEND_AWAITER_H
 
 #include <cstddef>
 #include <span>
 
 #include <liburing.h>
 
-#include "awaiter.h"
+#include <otter/async.h>
 
-namespace otter::async {
+namespace otter::net {
 
-class SendAwaiter : public IOAwaiter<SendAwaiter, std::size_t> {
+class SendAwaiter : public async::IOAwaiter<SendAwaiter, std::size_t> {
 private:
     int fd_;
     std::span<const std::byte> buffer_;
@@ -29,6 +29,6 @@ public:
     }
 };
 
-} // namespace otter::async
+} // namespace otter::net
 
-#endif // OTTER_ASYNC_SEND_AWAITER_H
+#endif // OTTER_NET_SEND_AWAITER_H

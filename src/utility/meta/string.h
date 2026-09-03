@@ -21,7 +21,8 @@ struct String {
 
     auto operator<=>(const String& other) const = default;
 
-    [[nodiscard]] constexpr auto view() const noexcept -> std::string_view
+    [[nodiscard]]
+    constexpr auto view() const noexcept -> std::string_view
     {
         return { data.data(), N - 1 };
     }

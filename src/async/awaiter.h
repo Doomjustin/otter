@@ -47,14 +47,13 @@ public:
 
         if constexpr (std::is_void_v<ResumeType>)
             return {};
-
         else
             return static_cast<Derived*>(this)->value();
     }
 
     auto value() const noexcept -> ResumeType
     {
-        return static_cast<const Derived*>(this)->value();
+        return static_cast<ResumeType>(result);
     }
 };
 

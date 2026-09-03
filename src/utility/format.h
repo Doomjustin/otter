@@ -21,6 +21,17 @@ template<typename T>
 concept has_format_as = requires(const T& t) { format_as(t); };
 
 template<typename T>
+    requires has_format_as<T>
+using format_as_result_t = decltype(format_as(std::declval<const T&>()));
+
+template<typename T>
+    requires has_format_as<T>
+auto invoke_format_as(const T& value) -> format_as_result_t<T>
+{
+    return format_as(value);
+}
+
+template<typename T>
 concept has_to_string = requires(const T& t) { t.to_string(); };
 
 template<typename T>
@@ -37,11 +48,11 @@ concept user_defined_type =
 
 template<typename T>
     requires otter::has_format_as<T>
-struct std::formatter<T> : std::formatter<decltype(otter::format_as(std::declval<T>()))> {
+struct std::formatter<T> : std::formatter<otter::format_as_result_t<T>> {
     auto format(const T& value, auto& ctx) const
     {
-        return std::formatter<decltype(otter::format_as(value))>::format(otter::format_as(value),
-                                                                         ctx);
+        return std::formatter<otter::format_as_result_t<T>>::format(otter::invoke_format_as(value),
+                                                                    ctx);
     }
 };
 
