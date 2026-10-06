@@ -1,0 +1,165 @@
+name: C++ CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: clang-tidy and clang-format
+    runs-on: ubuntu-latest
+    env:
+      BUILD_DIR: build-tidy
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      VCPKG_DEFAULT_TRIPLET: x64-linux
+      CMAKE_BUILD_TYPE: Release
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Install toolchain and lint tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy clang-format
+          python3 -m pip install --upgrade pip
+          python3 -m pip install cmake ninja
+
+      - name: Cache vcpkg artifacts
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.2.3
+        with:
+          path: |
+            ${{ env.VCPKG_ROOT }}
+            ~/.cache/vcpkg/archives
+          key: >-
+            vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
+
+      - name: Bootstrap vcpkg
+        run: |
+          if [ ! -d "${VCPKG_ROOT}" ]; then
+            git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
+          fi
+          "${VCPKG_ROOT}/bootstrap-vcpkg.sh" -disableMetrics
+
+      - name: Configure CMake for compile commands
+        run: |
+          cmake -S . -B "${BUILD_DIR}" \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DCMAKE_TOOLCHAIN_FILE="${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+
+      - name: Run clang-format check
+        run: |
+          mapfile -t files < <(find src -type f \( -name '*.h' -o -name '*.hpp' -o -name '*.cpp' -o -name '*.cc' -o -name '*.cxx' \))
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No C++ files found under src/. Skipping clang-format."
+            exit 0
+          fi
+          clang-format --dry-run --Werror "${files[@]}"
+
+      - name: Prepare clang-tidy compile database
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          src = Path("build-tidy/compile_commands.json")
+          out_dir = Path("build-tidy/clang-tidy-db")
+          out_dir.mkdir(parents=True, exist_ok=True)
+          dst = out_dir / "compile_commands.json"
+
+          with src.open("r", encoding="utf-8") as f:
+            entries = json.load(f)
+
+          def should_keep(arg: str) -> bool:
+            return not (
+              arg == "-fmodules-ts"
+              or arg.startswith("-fdeps-format=")
+              or arg.startswith("-fmodule-mapper=")
+            )
+
+          for entry in entries:
+            if "arguments" in entry and isinstance(entry["arguments"], list):
+              entry["arguments"] = [a for a in entry["arguments"] if should_keep(a)]
+            elif "command" in entry and isinstance(entry["command"], str):
+              parts = entry["command"].split()
+              entry["command"] = " ".join(a for a in parts if should_keep(a))
+
+          with dst.open("w", encoding="utf-8") as f:
+            json.dump(entries, f)
+          PY
+
+      - name: Run clang-tidy
+        run: |
+          mapfile -t files < <(find src -type f \( -name '*.cpp' -o -name '*.cc' -o -name '*.cxx' \))
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No C++ implementation files found under src/. Skipping clang-tidy."
+            exit 0
+          fi
+          clang-tidy --config-file=".clang-tidy" -p "${BUILD_DIR}/clang-tidy-db" "${files[@]}"
+
+  build-and-test:
+    name: Build and test (${{ matrix.build_type }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type:
+          - Debug
+          - Release
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      VCPKG_DEFAULT_TRIPLET: x64-linux
+      CMAKE_BUILD_TYPE: ${{ matrix.build_type }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Install toolchain helpers
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install cmake ninja
+
+      - name: Cache vcpkg artifacts
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.2.3
+        with:
+          path: |
+            ${{ env.VCPKG_ROOT }}
+            ~/.cache/vcpkg/archives
+          key: >-
+            vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
+
+      - name: Bootstrap vcpkg
+        run: |
+          if [ ! -d "${VCPKG_ROOT}" ]; then
+            git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
+          fi
+          "${VCPKG_ROOT}/bootstrap-vcpkg.sh" -disableMetrics
+
+      - name: Configure CMake
+        run: |
+          cmake -S . -B "build-${CMAKE_BUILD_TYPE}" \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
+            -DCMAKE_TOOLCHAIN_FILE="${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+
+      - name: Build
+        run: cmake --build "build-${CMAKE_BUILD_TYPE}" --config "${CMAKE_BUILD_TYPE}"
+
+      - name: Run tests
+        run: ctest --test-dir "build-${CMAKE_BUILD_TYPE}" --output-on-failure --build-config "${CMAKE_BUILD_TYPE}"
