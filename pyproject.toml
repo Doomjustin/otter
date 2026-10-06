@@ -1,0 +1,15 @@
+[project]
+name = "otter"
+version = "0.1.0"
+description = "exercise"
+readme = "README.md"
+authors = [
+    { name = "doom", email = "1075101233doom@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "requests>=2.34.2",
+    "ruff>=0.16.10",
+]

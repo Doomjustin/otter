@@ -1,0 +1,4 @@
+#ifndef OTTER_UTILITY_H
+#define OTTER_UTILITY_H
+
+#endif // OTTER_UTILITY_H
