@@ -12,7 +12,6 @@ Checks: >-
   modernize-use-nodiscard,
   readability-identifier-naming
 
-# 建议：不要将风格类警告（如后置返回类型、命名）强行设为 Error，除非是全自动格式化的 CI
 WarningsAsErrors: >-
   cppcoreguidelines-narrowing-conversions,
   cppcoreguidelines-pro-type-member-init
@@ -31,7 +30,7 @@ CheckOptions:
   - key: readability-identifier-naming.EnumCase
     value: CamelCase
   - key: readability-identifier-naming.EnumConstantCase
-    value: UPPER_CASE
+    value: CamelCase
   - key: readability-identifier-naming.FunctionCase
     value: lower_case
   - key: readability-identifier-naming.VariableCase
