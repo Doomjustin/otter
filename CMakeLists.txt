@@ -19,6 +19,12 @@ cmake_dependent_option(${PROJECT_NAME}_BUILD_TESTS
 find_package(fmt CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(Microsoft.GSL CONFIG REQUIRED)
+find_package(pybind11 CONFIG REQUIRED)
+find_package(magic_enum CONFIG REQUIRED)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(liburing REQUIRED IMPORTED_TARGET liburing)
+pkg_check_modules(jemalloc REQUIRED IMPORTED_TARGET jemalloc)
 
 if (${PROJECT_NAME}_BUILD_TESTS)
     find_package(Catch2 CONFIG REQUIRED)
