@@ -1,6 +1,6 @@
-#include <catch2/catch_test_macros.hpp>
+#include "utility.h"
 
-#include "otter/utility/utility.h"
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("utility basic behavior", "[utility]")
 {

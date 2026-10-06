@@ -75,7 +75,7 @@ def main() -> int:
 
     dir_path.mkdir(parents=True, exist_ok=True)
 
-    header_include = f"{name.removeprefix('src/')}.h"
+    header_include = f"{base_name}.h"
 
     namespace_name = "otter"
     parent_dir_name = dir_path.name
