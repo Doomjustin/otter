@@ -10,7 +10,10 @@
 
 #include <magic_enum/magic_enum.hpp>
 
-auto format_as(const std::error_code& ec) -> std::string;
+inline auto format_as(const std::error_code& ec) -> std::string
+{
+    return ec.message();
+}
 
 template<typename T>
 concept has_format_as = requires(const T& t) { format_as(t); };
