@@ -23,6 +23,7 @@ if (${PROJECT_NAME}_BUILD_TESTS AND OTTER_TEST_SOURCE)
 
     target_link_libraries(otter.test
         PRIVATE
+            otter::otter
             Catch2::Catch2WithMain
     )
 
