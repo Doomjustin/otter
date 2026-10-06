@@ -8,7 +8,9 @@ add_library(otter_utility ${OTTER_UTILITY_IMPLEMENT_SOURCE})
 add_library(otter::utility ALIAS otter_utility)
 
 target_compile_features(otter_utility PUBLIC cxx_std_23)
+
 target_include_directories(otter_utility PUBLIC ${OTTER_INCLUDE_DIR})
+
 target_link_libraries(otter_utility
     PUBLIC
         Microsoft.GSL::GSL

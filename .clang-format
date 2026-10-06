@@ -32,6 +32,9 @@ AllowShortFunctionsOnASingleLine: Empty
 AllowShortLoopsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: Never
 
+# 模板声明总是换行
+AlwaysBreakTemplateDeclarations: Yes
+
 RemoveBracesLLVM: true
 
 PointerAlignment: Left

@@ -1,25 +1,22 @@
 CompileFlags:
   CompilationDatabase: build
+  # 额外补充编译选项，开启编译器自身的标准警告
+  Add:
+    - "-Wall"
+    - "-Wextra"
+    - "-Wpedantic"
 
 Index:
   Background: Build
 
 Diagnostics:
-  ClangTidy:
-    Add:
-      - "modernize-*"
-      - "performance-*"
-      - "readability-*"
-    Remove:
-      - "readability-magic-numbers"
-      - "readability-braces-around-statements"
-      - "readability-implicit-bool-conversion"
-      - "readability-identifier-length"
-      - "readability-math-missing-parentheses"
-      - "readability-convert-member-functions-to-static"
-      - "modernize-use-nodiscard"
+  # 1. UnusedIncludes 是 Diagnostics 下的独立控制项
+  UnusedIncludes: Strict
 
 InlayHints:
   Enabled: true
   ParameterNames: true
   DeducedTypes: true
+  Designators: true       # C++20 指定初始化提示
+  BlockEnd: true         # 较长代码块结尾显示函数名/类名
+  TypeNameLimit: 24      # 避免推导出来的长模板类型撑爆屏幕

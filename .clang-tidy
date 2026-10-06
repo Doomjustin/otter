@@ -1,18 +1,27 @@
 ---
 Checks: >-
   -*,
-  cppcoreguidelines-*,
+  # 精选 cppcoreguidelines 核心且高收益的规则，避免全开
+  cppcoreguidelines-explicit-virtual-functions,
+  cppcoreguidelines-interfaces-global-init,
+  cppcoreguidelines-narrowing-conversions,
+  cppcoreguidelines-pro-type-member-init,
+
+  # 风格与现代化规则
   modernize-use-trailing-return-type,
   modernize-use-nodiscard,
   readability-identifier-naming
+
+# 建议：不要将风格类警告（如后置返回类型、命名）强行设为 Error，除非是全自动格式化的 CI
 WarningsAsErrors: >-
-  cppcoreguidelines-*,
-  modernize-use-trailing-return-type,
-  modernize-use-nodiscard,
-  readability-identifier-naming
+  cppcoreguidelines-narrowing-conversions,
+  cppcoreguidelines-pro-type-member-init
+
 HeaderFilterRegex: '^.*/src/.*'
 FormatStyle: file
+
 CheckOptions:
+  # 命名规范精细化配置
   - key: readability-identifier-naming.NamespaceCase
     value: lower_case
   - key: readability-identifier-naming.ClassCase
@@ -21,12 +30,24 @@ CheckOptions:
     value: CamelCase
   - key: readability-identifier-naming.EnumCase
     value: CamelCase
+  - key: readability-identifier-naming.EnumConstantCase
+    value: UPPER_CASE
   - key: readability-identifier-naming.FunctionCase
     value: lower_case
   - key: readability-identifier-naming.VariableCase
     value: lower_case
   - key: readability-identifier-naming.MemberCase
     value: lower_case
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: '_'
   - key: readability-identifier-naming.ParameterCase
     value: lower_case
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.ConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: UPPER_CASE
 ...
