@@ -14,4 +14,9 @@
         "externalConsole": false,
         "miDebuggerPath": "/opt/llvm-22/bin/lldb-dap"
     },
+    "github.copilot.chat.commitMessageGeneration.instructions": [
+        {
+            "file": ".github/copilot-commit-instructions.md"
+        }
+    ]
 }
