@@ -1,36 +1,70 @@
 Language: Cpp
-Standard: c++20
-BasedOnStyle: LLVM
+Standard: Latest
 ColumnLimit: 100
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
-AccessModifierOffset: -4
+IndentCaseLabels: false
+IndentAccessModifiers: false
 
 BreakBeforeBraces: Custom
 BraceWrapping:
+  AfterClass: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterEnum: false
+  AfterUnion: false
   AfterControlStatement: Never
-  BeforeCatch: true
   BeforeElse: true
+  BeforeCatch: true
   AfterFunction: true
+  SplitEmptyFunction: false
+  IndentBraces: false
 
 BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 2
+AccessModifierOffset: -4
 
 AllowShortBlocksOnASingleLine: Never
 AllowShortFunctionsOnASingleLine: Empty
-AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Never
+
+RemoveBracesLLVM: true
 
 PointerAlignment: Left
 ReferenceAlignment: Left
 BinPackArguments: false
 BinPackParameters: false
+
+IndentRequiresClause: true
+BreakBeforeConceptDeclarations: Always
+SpacesInAngles: Leave
+
+SpaceBeforeAssignmentOperators: true
+SpaceAfterTemplateKeyword: false
 SpaceBeforeParens: ControlStatements
 SpaceInEmptyParentheses: false
-SpacesInAngles: Leave
+Cpp11BracedListStyle: false
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
 
 SortIncludes: true
 IncludeBlocks: Regroup
 
-# Keep the project simple and compatible with the clang-format version used by GitHub Actions.
+IncludeCategories:
+  - Regex: '^<[a-z0-9_]+>$'
+    Priority: 1
+  - Regex: '^<(template)/.*>$'
+    Priority: 4
+  - Regex: '^<[a-zA-Z0-9_/\.]+\.(h|hpp)>$'
+    Priority: 2
+  - Regex: '^<gsl/.*>$'
+    Priority: 2
+  - Regex: '^<[a-zA-Z0-9_]+/[a-zA-Z0-9_/\.]+>$'
+    Priority: 3
+  - Regex: '^".*"'
+    Priority: 5
+PackConstructorInitializers: Never
