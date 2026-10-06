@@ -10,3 +10,33 @@
 /**/__pycache__/
 *.user
 CMakeUserPresets.json
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# C/C++ generated and local artifacts
+cmake-build-*/
+CMakeFiles/
+Testing/
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Python cache
+*.py[cod]
+
+# Coverage / reports
+coverage/
+htmlcov/
