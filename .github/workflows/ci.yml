@@ -61,9 +61,11 @@ jobs:
           "${VCPKG_ROOT}/bootstrap-vcpkg.sh" -disableMetrics
 
       - name: Setup CMake
-        uses: lukka/get-cmake@v3.28.0
-        with:
-          cmakeVersion: 'latest'
+        run: |
+          uv tool install "cmake>=4.0.3"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          cmake --version
+
 
       - name: Configure CMake for compile commands
         run: |
@@ -168,9 +170,10 @@ jobs:
           "${VCPKG_ROOT}/bootstrap-vcpkg.sh" -disableMetrics
 
       - name: Setup CMake
-        uses: lukka/get-cmake@v3.28.0
-        with:
-          cmakeVersion: 'latest'
+        run: |
+          uv tool install "cmake>=4.0.3"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          cmake --version
 
       - name: Configure CMake
         run: |
