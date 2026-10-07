@@ -15,7 +15,7 @@ auto as_u8(std::byte value) -> std::uint8_t
 
 } // namespace
 
-TEST_CASE("varint computes encoded length", "[coding][varint]")
+TEST_CASE("varint computes encoded length", "[otter.leveldb.coding][varint]")
 {
     CHECK(otter::leveldb::varint::length<std::uint64_t>(0) == 1);
     CHECK(otter::leveldb::varint::length<std::uint64_t>(127) == 1);
@@ -24,7 +24,7 @@ TEST_CASE("varint computes encoded length", "[coding][varint]")
     CHECK(otter::leveldb::varint::length<std::uint64_t>(16384) == 3);
 }
 
-TEST_CASE("varint encodes and decodes with byte iterators", "[coding][varint]")
+TEST_CASE("varint encodes and decodes with byte iterators", "[otter.leveldb.coding][varint]")
 {
     constexpr std::uint64_t value = 300;
     std::vector<std::byte> output(8);
@@ -40,7 +40,7 @@ TEST_CASE("varint encodes and decodes with byte iterators", "[coding][varint]")
     CHECK(static_cast<std::size_t>(iter - output.begin()) == written);
 }
 
-TEST_CASE("varint encodes and decodes with char iterators", "[coding][varint]")
+TEST_CASE("varint encodes and decodes with char iterators", "[otter.leveldb.coding][varint]")
 {
     constexpr std::uint32_t value = 0xFFFF;
     std::vector<char> output(8, '\0');
@@ -54,7 +54,7 @@ TEST_CASE("varint encodes and decodes with char iterators", "[coding][varint]")
     CHECK(static_cast<std::size_t>(iter - output.begin()) == written);
 }
 
-TEST_CASE("fixed encodes and decodes with byte iterators", "[coding][fixed]")
+TEST_CASE("fixed encodes and decodes with byte iterators", "[otter.leveldb.coding][fixed]")
 {
     constexpr std::uint32_t value = 0x12345678;
     std::vector<std::byte> output(sizeof(value));
@@ -71,7 +71,7 @@ TEST_CASE("fixed encodes and decodes with byte iterators", "[coding][fixed]")
     CHECK(static_cast<std::size_t>(iter - output.begin()) == sizeof(value));
 }
 
-TEST_CASE("fixed encodes and decodes with char iterators", "[coding][fixed]")
+TEST_CASE("fixed encodes and decodes with char iterators", "[otter.leveldb.coding][fixed]")
 {
     constexpr std::uint16_t value = 0xABCD;
     std::vector<char> output(sizeof(value), '\0');
@@ -84,7 +84,7 @@ TEST_CASE("fixed encodes and decodes with char iterators", "[coding][fixed]")
     CHECK(static_cast<std::size_t>(iter - output.begin()) == sizeof(value));
 }
 
-TEST_CASE("pack and unpack preserve byte order", "[coding][pack]")
+TEST_CASE("pack and unpack preserve byte order", "[otter.leveldb.coding][pack]")
 {
     using otter::leveldb::pack;
     using otter::leveldb::pack_bytes;

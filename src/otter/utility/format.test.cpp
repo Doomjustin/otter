@@ -9,7 +9,8 @@
 
 namespace {
 
-struct ViaToString {
+class ViaToString {
+public:
     [[nodiscard]]
     auto to_string() const -> std::string
     {
@@ -23,7 +24,8 @@ struct ViaToString {
     }
 };
 
-struct ViaToRepr {
+class ViaToRepr {
+public:
     [[nodiscard]]
     auto to_repr() const -> std::string
     {
@@ -31,7 +33,8 @@ struct ViaToRepr {
     }
 };
 
-struct ViaOstream {
+class ViaOstream {
+public:
     int value{};
 };
 
@@ -44,7 +47,8 @@ auto operator<<(std::ostream& os, const ViaOstream& value) -> std::ostream&
 
 enum class SampleState { Ready, Done };
 
-struct ViaFormatAs {
+class ViaFormatAs {
+public:
     int value{};
 };
 
