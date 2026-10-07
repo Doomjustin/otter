@@ -1,6 +1,6 @@
-#include <catch2/catch_test_macros.hpp>
-
 #include "dict.h"
+
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("meta::Dict supports typed keys, contains and defaults", "[otter.utility.meta]")
 {

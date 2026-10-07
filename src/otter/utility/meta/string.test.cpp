@@ -1,6 +1,6 @@
-#include <catch2/catch_test_macros.hpp>
-
 #include "string.h"
+
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("meta::String stores compile-time text and exposes string_view", "[otter.utility.meta]")
 {

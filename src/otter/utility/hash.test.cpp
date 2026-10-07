@@ -7,9 +7,8 @@
 #include <catch2/catch_test_macros.hpp>
 
 template<typename Map>
-concept supports_find_with_string_view = requires(Map& map, const std::string_view key) {
-    map.find(key);
-};
+concept supports_find_with_string_view =
+    requires(Map& map, const std::string_view key) { map.find(key); };
 
 TEST_CASE("hash matches the std::hash implementation for string_view", "[otter.utility.hash]")
 {

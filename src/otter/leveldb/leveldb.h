@@ -1,0 +1,4 @@
+#ifndef OTTER_LEVELDB_H
+#define OTTER_LEVELDB_H
+
+#endif // OTTER_LEVELDB_H

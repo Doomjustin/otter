@@ -1,6 +1,6 @@
-#include <catch2/catch_test_macros.hpp>
-
 #include "map.h"
+
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("meta::Map supports lookup, contains and typed defaults", "[otter.utility.meta]")
 {
