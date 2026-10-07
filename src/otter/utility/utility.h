@@ -5,6 +5,7 @@
 #include <otter/utility/hash.h>
 #include <otter/utility/log.h>
 #include <otter/utility/lru_cache.h>
+#include <otter/utility/named_type.h>
 #include <otter/utility/overloads.h>
 #include <otter/utility/random.h>
 #include <otter/utility/string_cast.h>
