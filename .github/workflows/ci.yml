@@ -1,4 +1,4 @@
-name: C++ CI
+name: CI
 
 on:
   push:
@@ -14,6 +14,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   lint:
@@ -26,7 +27,9 @@ jobs:
       CMAKE_BUILD_TYPE: Release
     steps:
       - name: Checkout repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 开启完整 commit 历史，供 git-clang-format 对比 diff
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v6
@@ -45,35 +48,32 @@ jobs:
             autoconf-archive \
             automake \
             build-essential \
-            clang-format \
-            clang-tidy \
+            clang-format-18 \
+            clang-tidy-18 \
             libtool \
             ninja-build
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-18 100
+          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-18 100
 
-      - name: Cache vcpkg artifacts
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - name: Cache vcpkg binary packages
+        uses: actions/cache@v4
         with:
-          path: |
-            ${{ env.VCPKG_ROOT }}
-            ~/.cache/vcpkg/archives
-          key: >-
-            vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          path: ~/.cache/vcpkg/archives
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             vcpkg-${{ runner.os }}-
 
       - name: Bootstrap vcpkg
         run: |
           if [ ! -d "${VCPKG_ROOT}" ]; then
-            git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
+            git clone --depth 1 https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
           fi
           "${VCPKG_ROOT}/bootstrap-vcpkg.sh" -disableMetrics
 
-      - name: Setup CMake
+      - name: Setup CMake 4.0+
         run: |
           uv tool install "cmake>=4.0.3"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          cmake --version
-
 
       - name: Configure CMake for compile commands
         run: |
@@ -83,55 +83,25 @@ jobs:
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
             -DCMAKE_TOOLCHAIN_FILE="${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
 
-      - name: Run clang-format check
+      # 增量游标格式化检查：仅针对 PR 改动到的代码行
+      - name: Run incremental clang-format check
+        if: github.event_name == 'pull_request'
         run: |
-          mapfile -t files < <(find src -type f \( -name '*.h' -o -name '*.hpp' -o -name '*.cpp' -o -name '*.cc' -o -name '*.cxx' \))
-          if [ "${#files[@]}" -eq 0 ]; then
-            echo "No C++ files found under src/. Skipping clang-format."
-            exit 0
-          fi
-          clang-format --dry-run --Werror "${files[@]}"
+          git fetch origin ${{ github.base_ref }}
+          git-clang-format --diff origin/${{ github.base_ref }}
 
-      - name: Prepare clang-tidy compile database
-        run: |
-          uv run python - <<'PY'
-          import json
-          from pathlib import Path
-
-          src = Path("build-tidy/compile_commands.json")
-          out_dir = Path("build-tidy/clang-tidy-db")
-          out_dir.mkdir(parents=True, exist_ok=True)
-          dst = out_dir / "compile_commands.json"
-
-          with src.open("r", encoding="utf-8") as f:
-            entries = json.load(f)
-
-          def should_keep(arg: str) -> bool:
-            return not (
-              arg == "-fmodules-ts"
-              or arg.startswith("-fdeps-format=")
-              or arg.startswith("-fmodule-mapper=")
-            )
-
-          for entry in entries:
-            if "arguments" in entry and isinstance(entry["arguments"], list):
-              entry["arguments"] = [a for a in entry["arguments"] if should_keep(a)]
-            elif "command" in entry and isinstance(entry["command"], str):
-              parts = entry["command"].split()
-              entry["command"] = " ".join(a for a in parts if should_keep(a))
-
-          with dst.open("w", encoding="utf-8") as f:
-            json.dump(entries, f)
-          PY
-
-      - name: Run clang-tidy
-        run: |
-          mapfile -t files < <(find src -type f \( -name '*.cpp' -o -name '*.cc' -o -name '*.cxx' \))
-          if [ "${#files[@]}" -eq 0 ]; then
-            echo "No C++ implementation files found under src/. Skipping clang-tidy."
-            exit 0
-          fi
-          clang-tidy --config-file=".clang-tidy" -p "${BUILD_DIR}/clang-tidy-db" "${files[@]}"
+      - name: Run clang-tidy review
+        if: github.event_name == 'pull_request'
+        uses: ZedThree/clang-tidy-review@v0.20.1
+        with:
+          build_dir: build-tidy
+          config_file: .clang-tidy
+          split_workflow: false
+          exclude: 'build*/**'
+          include: 'src/**/*.[ch]pp'
+          annotations: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-test:
     name: Build and test (${{ matrix.build_type }})
@@ -148,7 +118,7 @@ jobs:
       CMAKE_BUILD_TYPE: ${{ matrix.build_type }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@v4
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v6
@@ -170,29 +140,25 @@ jobs:
             libtool \
             ninja-build
 
-      - name: Cache vcpkg artifacts
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - name: Cache vcpkg binary packages
+        uses: actions/cache@v4
         with:
-          path: |
-            ${{ env.VCPKG_ROOT }}
-            ~/.cache/vcpkg/archives
-          key: >-
-            vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          path: ~/.cache/vcpkg/archives
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             vcpkg-${{ runner.os }}-
 
       - name: Bootstrap vcpkg
         run: |
           if [ ! -d "${VCPKG_ROOT}" ]; then
-            git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
+            git clone --depth 1 https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
           fi
           "${VCPKG_ROOT}/bootstrap-vcpkg.sh" -disableMetrics
 
-      - name: Setup CMake
+      - name: Setup CMake 4.0+
         run: |
           uv tool install "cmake>=4.0.3"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          cmake --version
 
       - name: Configure CMake
         run: |
